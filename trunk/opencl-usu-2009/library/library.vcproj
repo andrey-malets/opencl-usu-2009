@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)\..\..\lib\$(ProjectName).lib"
+				OutputFile="$(SolutionDir)..\lib\$(ProjectName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
