@@ -9,8 +9,11 @@ __kernel void threshold_byte(
 	uchar value, uchar lessValue, uchar moreValue)
 {
 	int i = get_global_id(0);
-	if(i <= width*height)
-		a[i] = (a[i] > value) ? moreValue : lessValue;
+	if(i <= ir_width*ir_height)
+	{
+		int index = x + y * width + i % ir_width + width * (i / ir_width);
+		a[index] = (a[index] > value) ? moreValue : lessValue;
+	}
 }
 
 __kernel void linearCombination_byte(
@@ -69,9 +72,12 @@ __kernel void threshold_float(
 	uint ir_height,
 	float value, float lessValue, float moreValue)
 {
-	uint i;
-	for(i = 0; i != width*height; ++i)
-		a[i] = (a[i] > value) ? moreValue : lessValue;
+	int i = get_global_id(0);
+	if(i <= ir_width*ir_height)
+	{
+		int index = x + y * width + i % ir_width + width * (i / ir_width);
+		a[index] = (a[index] > value) ? moreValue : lessValue;
+	}
 }
 
 __kernel void linearCombination_float(
@@ -133,9 +139,12 @@ __kernel void threshold_uint(
 	uint ir_height,
 	uint value, uint lessValue, uint moreValue)
 {
-	uint i = get_global_id(0);
-	if(i <= width*height)
-		a[i] = (a[i] > value) ? moreValue : lessValue;
+	int i = get_global_id(0);
+	if(i <= ir_width*ir_height)
+	{
+		int index = x + y * width + i % ir_width + width * (i / ir_width);
+		a[index] = (a[index] > value) ? moreValue : lessValue;
+	}
 }
 
 __kernel void linearCombination_uint(
