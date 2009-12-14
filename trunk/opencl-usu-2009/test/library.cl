@@ -1,7 +1,7 @@
 __kernel void threshold_byte(__global uchar* a, int size, uchar value, uchar lessValue, uchar moreValue)
 {
 	int i;
-	for(i = 0; i != size; ++i);
+	for(i = 0; i != size; ++i)
 		a[i] = (a[i] > value) ? moreValue : lessValue;
 }
 
