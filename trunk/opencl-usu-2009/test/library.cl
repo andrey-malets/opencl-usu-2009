@@ -36,6 +36,21 @@ __kernel void linearCombination_byte(
 	float a,
 	float b)
 {
+	int i = get_global_id(0);
+	if(i <= ir_width0*ir_height0)
+	{
+		int sindex = x1 + y1 * width1 + i % ir_width1 + width1 * (i / ir_width1);
+		int dindex = x0 + y0 * width0 + i % ir_width0 + width0 * (i / ir_width0);
+
+		float res = a*v0[dindex] + b*v1[sindex];
+		if(res > UCHAR_MAX)
+			v0[dindex] = UCHAR_MAX;
+		else
+			if(res < 0)
+				v0[dindex] = 0;
+			else
+				v0[dindex] = res;
+	}
 }
 
 // v0 -> (gauss) -> v1
@@ -100,7 +115,13 @@ __kernel void linearCombination_float(
 	float a,
 	float b)
 {
-	
+	int i = get_global_id(0);
+	if(i <= ir_width0*ir_height0)
+	{
+		int sindex = x1 + y1 * width1 + i % ir_width1 + width1 * (i / ir_width1);
+		int dindex = x0 + y0 * width0 + i % ir_width0 + width0 * (i / ir_width0);
+		v0[dindex] = a*v0[dindex] + b*v1[sindex];
+	}
 }
 
 
@@ -167,7 +188,21 @@ __kernel void linearCombination_uint(
 	float a,
 	float b)
 {
-	
+	int i = get_global_id(0);
+	if(i <= ir_width0*ir_height0)
+	{
+		int sindex = x1 + y1 * width1 + i % ir_width1 + width1 * (i / ir_width1);
+		int dindex = x0 + y0 * width0 + i % ir_width0 + width0 * (i / ir_width0);
+
+		float res = a*v0[dindex] + b*v1[sindex];
+		if(res > UINT_MAX)
+			v0[dindex] = UINT_MAX;
+		else
+			if(res < 0)
+				v0[dindex] = 0;
+			else
+				v0[dindex] = res;
+	}
 }
 
 
