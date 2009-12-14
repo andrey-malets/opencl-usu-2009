@@ -1,6 +1,8 @@
 #include "library.h"
 #include <iostream>
 
+int tests();
+
 void testThresholdByte()
 {
 	const size_t size = 10*10;
@@ -57,7 +59,8 @@ void testThresholdFloat()
 
 int main(int argc, const char** argv)
 {
-	testThresholdByte();
-	testThresholdFloat();
+//	testThresholdByte();
+//	testThresholdFloat();
+	tests();
 }
 
