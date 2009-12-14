@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "library", "library\library.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test\test.vcproj", "{BBBA9D00-9DF2-47D9-A10B-01EC5FB3E360}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CImg", "CImg\CImg.vcproj", "{2FFFADFF-8AB8-41ED-A2B5-D3B3F424C937}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -28,6 +30,12 @@ Global
 		{BBBA9D00-9DF2-47D9-A10B-01EC5FB3E360}.Release|Win32.Build.0 = Release|Win32
 		{BBBA9D00-9DF2-47D9-A10B-01EC5FB3E360}.Release|x64.ActiveCfg = Release|x64
 		{BBBA9D00-9DF2-47D9-A10B-01EC5FB3E360}.Release|x64.Build.0 = Release|x64
+		{2FFFADFF-8AB8-41ED-A2B5-D3B3F424C937}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2FFFADFF-8AB8-41ED-A2B5-D3B3F424C937}.Debug|Win32.Build.0 = Debug|Win32
+		{2FFFADFF-8AB8-41ED-A2B5-D3B3F424C937}.Debug|x64.ActiveCfg = Debug|Win32
+		{2FFFADFF-8AB8-41ED-A2B5-D3B3F424C937}.Release|Win32.ActiveCfg = Release|Win32
+		{2FFFADFF-8AB8-41ED-A2B5-D3B3F424C937}.Release|Win32.Build.0 = Release|Win32
+		{2FFFADFF-8AB8-41ED-A2B5-D3B3F424C937}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
