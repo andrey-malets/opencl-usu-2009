@@ -120,9 +120,11 @@ namespace opencl_usu_2009
 
 	void Identificator<byte>::trheshold(const byte value, const byte lessValue, const byte moreValue)
 	{
+		size_t size = getWidth()*getHeight();
+
 		cl_int err;
 		err = clSetKernelArg(thresholdKernel, 0, sizeof(cl_mem), (void *)&buffer);
-		err |= clSetKernelArg(thresholdKernel, 1, sizeof(cl_int), (void *)(getWidth()*getHeight()));
+		err |= clSetKernelArg(thresholdKernel, 1, sizeof(cl_int), (void *)(&size));
 		err |= clSetKernelArg(thresholdKernel, 2, sizeof(cl_uchar), (void *)&value);
 		err |= clSetKernelArg(thresholdKernel, 3, sizeof(cl_uchar), (void *)&lessValue);
 		err |= clSetKernelArg(thresholdKernel, 4, sizeof(cl_uchar), (void *)&moreValue);
