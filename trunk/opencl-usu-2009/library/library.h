@@ -36,6 +36,7 @@ namespace opencl_usu_2009
 
 	protected:
 		Common(size_t width, size_t height);
+		Common(const Common &other);
 		~Common();
 
 		size_t getX() { return x; }
@@ -107,6 +108,12 @@ namespace opencl_usu_2009
 		/* Make the gauss filtration of the interest rectangle */
 		void gauss(const float sigma, const size_t n) throw (APIException);
 
+		/* Make a copy of this buffer in the device memory */
+		Identificator copy()
+		{
+			return Identificator(buffer, *this);
+		}
+
 		~Identificator()
 		{
 			clReleaseMemObject(buffer);
@@ -114,6 +121,17 @@ namespace opencl_usu_2009
 
 	private:
 		Identificator operator=(const Identificator<Pixel> &rhs) { /* no, thanks */ }
+
+		Identificator(const cl_mem otherBuffer, const Common &other) : buffer(buffer), Common(other)
+		{
+			cl_int err;
+			size_t size = sizeof(Pixel) * getWidth() * getHeight();
+			buffer = clCreateBuffer(getContext(), CL_MEM_READ_WRITE, size, NULL, &err);
+			check(err);
+
+			err = clEnqueueCopyBuffer(getQueue(), otherBuffer, buffer, 0, 0, size, 0, NULL, NULL);
+			check(err);
+		}
 
 		cl_mem buffer;
 	};

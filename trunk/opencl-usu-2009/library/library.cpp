@@ -13,6 +13,14 @@ namespace opencl_usu_2009
 			init();
 	}
 
+	Common::Common(const Common &other)
+		: width(other.width), height(other.height),
+		x(other.x), y(other.y),
+		ir_width(other.ir_width), ir_height(other.ir_height)
+	{
+		++refcount;
+	}
+
 	Common::~Common()
 	{
 		if(--refcount == 0)
