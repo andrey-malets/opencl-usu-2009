@@ -4,7 +4,9 @@
 #include "CImg/CImg.h"
 #include "CL/cl.h"
 
-#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
 #include <stdexcept>
 
 /* throw specification ignored */
@@ -22,6 +24,10 @@ namespace opencl_usu_2009
 	class Common
 	{
 	public:
+
+		/* File with kernels source code */
+		static const char *kernelsFile;
+
 		/* Return image width */
 		size_t getWidth() const throw() { return width; }
 
@@ -39,16 +45,20 @@ namespace opencl_usu_2009
 		Common(const Common &other);
 		~Common();
 
-		size_t getX() { return x; }
-		size_t getY() { return y; }
+		size_t getX() const { return x; }
+		size_t getY() const { return y; }
 
-		size_t getIRWidth() { return ir_width; }
-		size_t getIRHeight() { return ir_height; }
+		size_t getIRWidth() const { return ir_width; }
+		size_t getIRHeight() const { return ir_height; }
 
-		cl_command_queue getQueue() { return command_queue; }
-		cl_context getContext() { return context; }
+		static cl_command_queue getQueue() { return command_queue; }
+		static cl_context getContext() { return context; }
 
 		static void check(cl_int);
+
+		cl_mem buffer;
+		static cl_kernel thresholdKernel, linearCombinationKernel, gaussKernel;
+		static const char *pixelTypeSuffix;
 
 	private:
 		Common() { }
@@ -59,6 +69,7 @@ namespace opencl_usu_2009
 		static size_t refcount;
 		static cl_context context;
 		static cl_command_queue command_queue;
+		static cl_program program;
 		size_t width, height, ir_width, ir_height, x, y;
 	};
 
@@ -96,7 +107,12 @@ namespace opencl_usu_2009
 		}
 
 		/* Unload the image from device memory to the buffer at dest */
-		void unload(Pixel *dest) const throw (APIException);
+		void unload(Pixel *dest) const throw (APIException)
+		{
+			cl_int err = clEnqueueReadBuffer(getQueue(), buffer, CL_TRUE, 0,
+				sizeof(Pixel) * getWidth() * getHeight(), dest, 0, NULL, NULL);
+			check(err);
+		}
 
 		/* Apply threshold processing to the interest rectangle */
 		void trheshold(const Pixel value, const Pixel lessValue, const Pixel moreValue) throw (APIException);
@@ -132,8 +148,6 @@ namespace opencl_usu_2009
 			err = clEnqueueCopyBuffer(getQueue(), otherBuffer, buffer, 0, 0, size, 0, NULL, NULL);
 			check(err);
 		}
-
-		cl_mem buffer;
 	};
 }
 
