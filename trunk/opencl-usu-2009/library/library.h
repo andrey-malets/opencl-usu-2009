@@ -53,12 +53,13 @@ namespace opencl_usu_2009
 
 		static cl_command_queue getQueue() { return command_queue; }
 		static cl_context getContext() { return context; }
+		static cl_program getProgram() { return program; }
+
+		void setCommonVariables(cl_kernel kernel, cl_uint start = 0) const;
 
 		static void check(cl_int);
 
 		cl_mem buffer;
-		static cl_kernel thresholdKernel, linearCombinationKernel, gaussKernel;
-		static const char *pixelTypeSuffix;
 
 	private:
 		Common() { }
@@ -73,7 +74,7 @@ namespace opencl_usu_2009
 		size_t width, height, ir_width, ir_height, x, y;
 	};
 
-	template<typename Pixel = byte> class Identificator : public Common
+	template<typename Pixel, typename ClType> class Identificator : public Common
 	{
 	public:
 		/* Create an image in the device memory from CImg image source */
@@ -82,6 +83,7 @@ namespace opencl_usu_2009
 		/* Create an image in the device memory from the pixel vector */
 		Identificator(const Pixel *source, const size_t width, const size_t height) throw(APIException) : Common(width, height)
 		{
+			init();
 			cl_int err;
 			size_t size = sizeof(Pixel) * getWidth() * getHeight();
 			buffer = clCreateBuffer(getContext(), CL_MEM_READ_WRITE, size, (void *)source, &err);
@@ -100,9 +102,10 @@ namespace opencl_usu_2009
 		Identificator(const size_t width, const size_t height, Pixel value) throw(APIException);
 
 		/* Create an image copying it's contents from the specified image */
-		Identificator(const Identificator<Pixel> &other) throw(APIException)
+		Identificator(const Identificator<Pixel, ClType> &other) throw(APIException)
 			: Common(other.getWidth(), other.getHeight()), buffer(other.buffer)
 		{
+			init();
 			clRetainMemObject(buffer);
 		}
 
@@ -115,14 +118,60 @@ namespace opencl_usu_2009
 		}
 
 		/* Apply threshold processing to the interest rectangle */
-		void trheshold(const Pixel value, const Pixel lessValue, const Pixel moreValue) throw (APIException);
+		void trheshold(const Pixel value, const Pixel lessValue, const Pixel moreValue) throw (APIException)
+		{
+			setCommonVariables(thresholdKernel);
+
+			cl_int err;
+			err = clSetKernelArg(thresholdKernel, 7, sizeof(ClType), (void *)&value);
+			err |= clSetKernelArg(thresholdKernel, 8, sizeof(ClType), (void *)&lessValue);
+			err |= clSetKernelArg(thresholdKernel, 9, sizeof(ClType), (void *)&moreValue);
+			check(err);
+
+			// TODO: NDRangeKernel
+			err = clEnqueueTask(getQueue(), thresholdKernel, 0, NULL, NULL);
+			check(err);
+		}
 
 		/* Make the linear combination of interest rectangles of the current image and supplied image which
 		in this case must be of the same dimensions, exception is thrown otherwise */
-		void linearCombination(const Identificator<Pixel> other, const float a, const float b) throw (APIException);
+		void linearCombination(const Identificator<Pixel, ClType> &other, const float a, const float b) throw (APIException)
+		{
+			if(other.getIRWidth() != getIRWidth() || other.getIRHeight() != getIRHeight())
+				throw DimensionException();
 
-		/* Make the gauss filtration of the interest rectangle */
-		void gauss(const float sigma, const size_t n) throw (APIException);
+			setCommonVariables(linearCombinationKernel);
+			other.setCommonVariables(linearCombinationKernel, 7);
+
+			cl_int err;
+			err = clSetKernelArg(linearCombinationKernel, 14, sizeof(cl_float), &a);
+			err = clSetKernelArg(linearCombinationKernel, 15, sizeof(cl_float), &b);
+
+			// TODO: NDRangeKernel
+			err = clEnqueueTask(getQueue(), linearCombinationKernel, 0, NULL, NULL);
+			check(err);
+		}
+
+		/* Make the gauss filtration of the interest rectangle and place it to dest */
+		void gauss(Identificator<Pixel, ClType> &other, const float sigma, const size_t n) const throw (APIException)
+		{
+			if(n % 2 == 0)
+				throw DimensionException();
+
+			if(other.getIRWidth() != getIRWidth() - n + 1 || other.getIRHeight() != getIRHeight() - n + 1)
+				throw DimensionException();
+
+			setCommonVariables(gaussKernel);
+			other.setCommonVariables(gaussKernel, 7);
+
+			cl_int err;
+			err = clSetKernelArg(gaussKernel, 14, sizeof(cl_float), &sigma);
+			err = clSetKernelArg(gaussKernel, 15, sizeof(cl_uint), &n);
+
+			// TODO: NDRangeKernel
+			err = clEnqueueTask(getQueue(), gaussKernel, 0, NULL, NULL);
+			check(err);
+		}
 
 		/* Make a copy of this buffer in the device memory */
 		Identificator copy()
@@ -136,10 +185,11 @@ namespace opencl_usu_2009
 		}
 
 	private:
-		Identificator operator=(const Identificator<Pixel> &rhs) { /* no, thanks */ }
+		Identificator operator=(const Identificator<Pixel, ClType> &rhs) { /* no, thanks */ }
 
-		Identificator(const cl_mem otherBuffer, const Common &other) : buffer(buffer), Common(other)
+		Identificator(const cl_mem otherBuffer, const Common &other) : Common(other)
 		{
+			init();
 			cl_int err;
 			size_t size = sizeof(Pixel) * getWidth() * getHeight();
 			buffer = clCreateBuffer(getContext(), CL_MEM_READ_WRITE, size, NULL, &err);
@@ -148,7 +198,46 @@ namespace opencl_usu_2009
 			err = clEnqueueCopyBuffer(getQueue(), otherBuffer, buffer, 0, 0, size, 0, NULL, NULL);
 			check(err);
 		}
+
+		static void init()
+		{
+			if(++refcount == 1)
+			{
+				cl_int err;
+				thresholdKernel = clCreateKernel(getProgram(), (std::string("threshold") + pixelTypeSuffix).c_str(), &err);
+				check(err);
+				gaussKernel = clCreateKernel(getProgram(), (std::string("gauss") + pixelTypeSuffix).c_str(), &err);
+				check(err);
+				linearCombinationKernel = clCreateKernel(getProgram(), (std::string("linearCombination") + pixelTypeSuffix).c_str(), &err);
+				check(err);
+			}
+		}
+
+		static void finalize()
+		{
+			if(--refcount == 0)
+			{
+				clReleaseKernel(thresholdKernel);
+				clReleaseKernel(gaussKernel);
+				clReleaseKernel(linearCombinationKernel);
+			}
+		}
+
+		static cl_kernel thresholdKernel, linearCombinationKernel, gaussKernel;
+		static const char *pixelTypeSuffix;
+		static size_t refcount;
 	};
+
+	template<typename Pixel, typename ClType> cl_kernel Identificator<Pixel, ClType>::thresholdKernel;
+	template<typename Pixel, typename ClType> cl_kernel Identificator<Pixel, ClType>::linearCombinationKernel;
+	template<typename Pixel, typename ClType> cl_kernel Identificator<Pixel, ClType>::gaussKernel;
+	template<typename Pixel, typename ClType> size_t Identificator<Pixel, ClType>::refcount;
+
+	typedef Identificator<byte, cl_uchar> ByteID;
+	typedef Identificator<float, cl_float> FloatID;
+
+	const char *ByteID::pixelTypeSuffix = "_byte";
+	const char *FloatID::pixelTypeSuffix = "_float";
 }
 
 #endif // _LIBRARY_H
