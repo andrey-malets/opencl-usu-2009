@@ -128,8 +128,11 @@ namespace opencl_usu_2009
 			err |= clSetKernelArg(thresholdKernel, 9, sizeof(ClType), (void *)&moreValue);
 			check(err);
 
-			// TODO: NDRangeKernel
-			err = clEnqueueTask(getQueue(), thresholdKernel, 0, NULL, NULL);
+			size_t size = getWidth() * getHeight(), global = ((255+size)/256)*256, local = 256;
+			err = clEnqueueNDRangeKernel(getQueue(), thresholdKernel, 1, NULL, &global, &local, 0, NULL, NULL);
+			check(err);
+
+			err = clFinish(getQueue());
 			check(err);
 		}
 
@@ -149,6 +152,9 @@ namespace opencl_usu_2009
 
 			// TODO: NDRangeKernel
 			err = clEnqueueTask(getQueue(), linearCombinationKernel, 0, NULL, NULL);
+			check(err);
+
+			err = clFinish(getQueue());
 			check(err);
 		}
 
@@ -170,6 +176,9 @@ namespace opencl_usu_2009
 
 			// TODO: NDRangeKernel
 			err = clEnqueueTask(getQueue(), gaussKernel, 0, NULL, NULL);
+			check(err);
+
+			err = clFinish(getQueue());
 			check(err);
 		}
 
@@ -234,10 +243,13 @@ namespace opencl_usu_2009
 	template<typename Pixel, typename ClType> size_t Identificator<Pixel, ClType>::refcount;
 
 	typedef Identificator<byte, cl_uchar> ByteID;
-	typedef Identificator<float, cl_float> FloatID;
-
 	const char *ByteID::pixelTypeSuffix = "_byte";
+
+	typedef Identificator<float, cl_float> FloatID;
 	const char *FloatID::pixelTypeSuffix = "_float";
+
+	typedef Identificator<unsigned int, cl_uint> UintID;
+	const char *UintID::pixelTypeSuffix = "_uint";
 }
 
 #endif // _LIBRARY_H
