@@ -101,12 +101,12 @@ namespace opencl_usu_2009
 	{
 		cl_int err;
 		err = clSetKernelArg(kernel, start, sizeof(cl_mem), (void *)&buffer);
-		err |= clSetKernelArg(kernel, start + 1, sizeof(cl_int), (void *)&width);
-		err |= clSetKernelArg(kernel, start + 2, sizeof(cl_int), (void *)&height);
-		err |= clSetKernelArg(kernel, start + 3, sizeof(cl_int), (void *)&x);
-		err |= clSetKernelArg(kernel, start + 4, sizeof(cl_int), (void *)&y);
-		err |= clSetKernelArg(kernel, start + 5, sizeof(cl_int), (void *)&ir_width);
-		err |= clSetKernelArg(kernel, start + 6, sizeof(cl_int), (void *)&ir_height);
+		err |= clSetKernelArg(kernel, start + 1, sizeof(cl_uint), (void *)&width);
+		err |= clSetKernelArg(kernel, start + 2, sizeof(cl_uint), (void *)&height);
+		err |= clSetKernelArg(kernel, start + 3, sizeof(cl_uint), (void *)&x);
+		err |= clSetKernelArg(kernel, start + 4, sizeof(cl_uint), (void *)&y);
+		err |= clSetKernelArg(kernel, start + 5, sizeof(cl_uint), (void *)&ir_width);
+		err |= clSetKernelArg(kernel, start + 6, sizeof(cl_uint), (void *)&ir_height);
 		check(err);
 	}
 
