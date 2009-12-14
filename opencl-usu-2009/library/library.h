@@ -55,6 +55,16 @@ namespace opencl_usu_2009
 		static cl_context getContext() { return context; }
 		static cl_program getProgram() { return program; }
 
+		void execute(cl_kernel kernel)
+		{
+			size_t size = getIRWidth() * getIRHeight(), global = ((localWorkSize-1+size)/localWorkSize)*localWorkSize;
+			cl_int err = clEnqueueNDRangeKernel(getQueue(), kernel, 1, NULL, &global, &localWorkSize, 0, NULL, NULL);
+			check(err);
+
+			err = clFinish(getQueue());
+			check(err);
+		}
+
 		void setCommonVariables(cl_kernel kernel, cl_uint start = 0) const;
 
 		static void check(cl_int);
@@ -71,6 +81,7 @@ namespace opencl_usu_2009
 		static cl_context context;
 		static cl_command_queue command_queue;
 		static cl_program program;
+		static size_t localWorkSize;
 		size_t width, height, ir_width, ir_height, x, y;
 	};
 
@@ -128,12 +139,7 @@ namespace opencl_usu_2009
 			err |= clSetKernelArg(thresholdKernel, 9, sizeof(ClType), (void *)&moreValue);
 			check(err);
 
-			size_t size = getWidth() * getHeight(), global = ((255+size)/256)*256, local = 256;
-			err = clEnqueueNDRangeKernel(getQueue(), thresholdKernel, 1, NULL, &global, &local, 0, NULL, NULL);
-			check(err);
-
-			err = clFinish(getQueue());
-			check(err);
+			execute(thresholdKernel);
 		}
 
 		/* Make the linear combination of interest rectangles of the current image and supplied image which
@@ -150,12 +156,7 @@ namespace opencl_usu_2009
 			err = clSetKernelArg(linearCombinationKernel, 14, sizeof(cl_float), &a);
 			err = clSetKernelArg(linearCombinationKernel, 15, sizeof(cl_float), &b);
 
-			// TODO: NDRangeKernel
-			err = clEnqueueTask(getQueue(), linearCombinationKernel, 0, NULL, NULL);
-			check(err);
-
-			err = clFinish(getQueue());
-			check(err);
+			execute(linearCombinationKernel);
 		}
 
 		/* Make the gauss filtration of the interest rectangle and place it to dest */
@@ -174,12 +175,7 @@ namespace opencl_usu_2009
 			err = clSetKernelArg(gaussKernel, 14, sizeof(cl_float), &sigma);
 			err = clSetKernelArg(gaussKernel, 15, sizeof(cl_uint), &n);
 
-			// TODO: NDRangeKernel
-			err = clEnqueueTask(getQueue(), gaussKernel, 0, NULL, NULL);
-			check(err);
-
-			err = clFinish(getQueue());
-			check(err);
+			execute(gaussKernel);
 		}
 
 		/* Make a copy of this buffer in the device memory */
