@@ -82,10 +82,8 @@ __kernel void gauss_byte(
 		float s = 0.0;
 		for(int i = 0; i != 2*n+1; ++i)
 			for(int j = 0; j != 2*n+1; ++j)
-				s+= w[i*(2*n+1)+j] =
-					1/(2 * M_PI * sigma * sigma)
-					* exp ((float) -((i-n-1)*(i-n-1)+(j-n-1)*(j-n-1))
-					/ (2 * sigma * sigma));
+				s+=(w[i*(2*n+1)+j] = 1/exp(((float) (i-n-1)*(i-n-1)+(j-n-1)*(j-n-1)) / (2 * sigma * sigma)));
+					
 		for(int i = 0; i != (2*n+1)*(2*n+1); ++i)
 			w[i] /= s;
 	}
@@ -95,12 +93,16 @@ __kernel void gauss_byte(
 	{
 		int dindex = x1 + y1 * width1 + myId % ir_width1 + width1 * (myId / ir_width1);
 		float res = 0;
-		for(int i = 0; i != (2*n+1)*(2*n+1); ++i)
-		{
-			int sindex = x0 + y0* width0 + (myId + i - n - 1) % ir_width0 + width0 * ((myId + i - n - 1) / ir_width0);
-			res += v0[sindex] * w[i];
-		}
+		for(int i = 0; i != 2*n+1; ++i)
+			for(int j = 0; j != 2*n+1; ++j)
+			{
+				int sindex =
+					j + x0 + myId % ir_width1
+					+ (y0 + i + myId / ir_width1) * width0;
 
+				res += v0[sindex] * w[i*(2*n+1)+j];
+			}
+		
 		if(res > UCHAR_MAX)
 			v1[dindex] = UCHAR_MAX;
 		else
@@ -187,10 +189,8 @@ __kernel void gauss_float(
 		float s = 0.0;
 		for(int i = 0; i != 2*n+1; ++i)
 			for(int j = 0; j != 2*n+1; ++j)
-				s+= w[i*(2*n+1)+j] =
-					1/(2 * M_PI * sigma * sigma)
-					* exp ((float) -((i-n-1)*(i-n-1)+(j-n-1)*(j-n-1))
-					/ (2 * sigma * sigma));
+				s+=(w[i*(2*n+1)+j] = 1/exp(((float) (i-n-1)*(i-n-1)+(j-n-1)*(j-n-1)) / (2 * sigma * sigma)));
+					
 		for(int i = 0; i != (2*n+1)*(2*n+1); ++i)
 			w[i] /= s;
 	}
@@ -199,12 +199,15 @@ __kernel void gauss_float(
 	if(myId <= ir_width1*ir_height1)
 	{
 		int dindex = x1 + y1 * width1 + myId % ir_width1 + width1 * (myId / ir_width1);
-		v1[dindex] = 0;
-		for(int i = -n; i != n+1; ++i)
-			for(int j = -n; j != n+1; ++j)
+		float res = 0;
+		for(int i = 0; i != 2*n+1; ++i)
+			for(int j = 0; j != 2*n+1; ++j)
 			{
-				int sindex = x0 + i + (y0 + j)* width0 + myId % ir_width0 + width0 * (myId / ir_width0);
-				v1[dindex] += v0[sindex] * w[(i+n)*(2*n+1)+(j+n)];
+				int sindex =
+					j + x0 + myId % ir_width1
+					+ (y0 + i + myId / ir_width1) * width0;
+
+				res += v0[sindex] * w[i*(2*n+1)+j];
 			}
 	}
 }
@@ -293,10 +296,8 @@ __kernel void gauss_uint(
 		float s = 0.0;
 		for(int i = 0; i != 2*n+1; ++i)
 			for(int j = 0; j != 2*n+1; ++j)
-				s+= w[i*(2*n+1)+j] =
-					1/(2 * M_PI * sigma * sigma)
-					* exp ((float) -((i-n-1)*(i-n-1)+(j-n-1)*(j-n-1))
-					/ (2 * sigma * sigma));
+				s+=(w[i*(2*n+1)+j] = 1/exp(((float) (i-n-1)*(i-n-1)+(j-n-1)*(j-n-1)) / (2 * sigma * sigma)));
+					
 		for(int i = 0; i != (2*n+1)*(2*n+1); ++i)
 			w[i] /= s;
 	}
@@ -306,19 +307,22 @@ __kernel void gauss_uint(
 	{
 		int dindex = x1 + y1 * width1 + myId % ir_width1 + width1 * (myId / ir_width1);
 		float res = 0;
-		for(int i = -n; i != n+1; ++i)
-			for(int j = -n; j != n+1; ++j)
+		for(int i = 0; i != 2*n+1; ++i)
+			for(int j = 0; j != 2*n+1; ++j)
 			{
-				int sindex = x0 + i + (y0 + j)* width0 + myId % ir_width0 + width0 * (myId / ir_width0);
-				res += v0[sindex] * w[(i+n)*(2*n+1)+(j+n)];
-			}
+				int sindex =
+					j + x0 + myId % ir_width1
+					+ (y0 + i + myId / ir_width1) * width0;
 
+				res += v0[sindex] * w[i*(2*n+1)+j];
+			}
+		
 		if(res > UINT_MAX)
-			v0[dindex] = UINT_MAX;
+			v1[dindex] = UINT_MAX;
 		else
 			if(res < 0)
-				v0[dindex] = 0;
+				v1[dindex] = 0;
 			else
-				v0[dindex] = res;
+				v1[dindex] = res;
 	}
 }

@@ -167,6 +167,7 @@ namespace opencl_usu_2009
 			err = clSetKernelArg(gaussKernel, 14, sizeof(cl_float), &sigma);
 			err = clSetKernelArg(gaussKernel, 15, sizeof(cl_uint), &n);
 			err = clSetKernelArg(gaussKernel, 16, sizeof(cl_mem), &gaussBuffer);
+			check(err);
 
 			execute(gaussKernel);
 
