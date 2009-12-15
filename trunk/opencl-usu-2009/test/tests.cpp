@@ -26,14 +26,14 @@ struct gp
 	size_t r;
 };
 
-const size_t repeateCount = 10;
-const size_t executeCount = 10;
+const size_t repeateCount = 1;
+const size_t executeCount = 1;
 // Array of dimentions
-const size d[] = {{320, 240}, {640, 480}, {1024, 768}};//, {7000, 7000}};
+const size d[] = {{320, 240}, {640, 480}, {1024, 768}, {1280, 1024}};//, {1980, 1080}, {3000, 2000}, {4000, 3000}};//, {7000, 7000}};
 //const size d[] = {{2000, 2000}};
 const std::vector<size> dimentions(d, d + sizeof(d) / sizeof(size));
 std::vector<std::vector<double> > values(sizeof(d) / sizeof(size), std::vector<double>(repeateCount, 0));
-const gp g[] = {{1, 3}, {2, 6}, {3, 9}, {5, 15}};
+const gp g[] = {{1, 3}, {2, 6}, {3, 9}, {4, 12}};
 const std::vector<gp> gauss(g, g + sizeof(g) / sizeof(gp));
 
 void thresholdOpencl()
@@ -223,10 +223,10 @@ int tests()
 
 	checkLinear();
 	return 1;
-*/
+
 	checkGauss();
 	return 1;
-
+*/
 	srand(clock());
 /*
 	// Treshold OpenCL
@@ -249,6 +249,17 @@ int tests()
 	linearCombinationCpu();
 	printAverage(values);
 */
+
+
+	// Gauss OpenCL
+	std::cout << "Gauss OpenCL" << std::endl;
+	for ( int i = 0; i != gauss.size(); ++ i)
+	{
+		std::cout << gauss[i].s << " " << gauss[i].r << std::endl;
+		gaussOpencl(gauss[i].s, gauss[i].r);
+		printAverage(values);
+	}
+
 	// Gauss CPU
 	std::cout << "Gauss CPU" << std::endl;
 	for ( int i = 0; i != gauss.size(); ++ i)
@@ -258,7 +269,6 @@ int tests()
 		printAverage(values);
 	}
 	
-
 	return 1;
 }
 
