@@ -29,8 +29,8 @@ struct gp
 const size_t repeateCount = 1;
 const size_t executeCount = 1;
 // Array of dimentions
-const size d[] = {{320, 240}, {640, 480}, {1024, 768}, {1280, 1024}};//, {1980, 1080}, {3000, 2000}, {4000, 3000}};//, {7000, 7000}};
-//const size d[] = {{2000, 2000}};
+//const size d[] = {{320, 240}, {640, 480}, {1024, 768}, {1280, 1024}};
+const size d[] = {{4000, 3500}, {4500, 4000}, {5000, 4500}, {6000, 5500}, {10000, 10000}};
 const std::vector<size> dimentions(d, d + sizeof(d) / sizeof(size));
 std::vector<std::vector<double> > values(sizeof(d) / sizeof(size), std::vector<double>(repeateCount, 0));
 const gp g[] = {{1, 3}, {2, 6}, {3, 9}, {4, 12}};
@@ -220,15 +220,16 @@ int tests()
 /*
 	checkThreshold();
 	return 1;
-
 	checkLinear();
 	return 1;
 
+*/
 	checkGauss();
 	return 1;
-*/
-	srand(clock());
+
 /*
+	srand(clock());
+
 	// Treshold OpenCL
 	std::cout << "Threshold OpenCL" << std::endl;
 	thresholdOpencl();
@@ -248,28 +249,25 @@ int tests()
 	std::cout << "LinearCombination CPU" << std::endl;
 	linearCombinationCpu();
 	printAverage(values);
-*/
 
+	//std::cout << "Gauss OpenCL" << std::endl;
+	//for ( int i = 0; i != gauss.size(); ++ i)
+	//{
+	//	std::cout << gauss[i].s << " " << gauss[i].r << std::endl;
+	//	gaussOpencl(gauss[i].s, gauss[i].r);
+	//	printAverage(values);
+	//}
 
-	// Gauss OpenCL
-	std::cout << "Gauss OpenCL" << std::endl;
-	for ( int i = 0; i != gauss.size(); ++ i)
-	{
-		std::cout << gauss[i].s << " " << gauss[i].r << std::endl;
-		gaussOpencl(gauss[i].s, gauss[i].r);
-		printAverage(values);
-	}
+	//// Gauss CPU
+	//std::cout << "Gauss CPU" << std::endl;
+	//for ( int i = 0; i != gauss.size(); ++ i)
+	//{
+	//	std::cout << gauss[i].s << " " << gauss[i].r << std::endl;
+	//	gaussCpu(gauss[i].s, gauss[i].r);
+	//	printAverage(values);
+	//}
 
-	// Gauss CPU
-	std::cout << "Gauss CPU" << std::endl;
-	for ( int i = 0; i != gauss.size(); ++ i)
-	{
-		std::cout << gauss[i].s << " " << gauss[i].r << std::endl;
-		gaussCpu(gauss[i].s, gauss[i].r);
-		printAverage(values);
-	}
-	
-	return 1;
+	return 1; */
 }
 
 void checkThreshold()
