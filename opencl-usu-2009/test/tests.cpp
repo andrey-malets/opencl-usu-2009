@@ -308,7 +308,7 @@ void checkLinear()
 void checkGauss()
 {
 	cimg_library::CImg<byte> image1("3.bmp");
-	cimg_library::CImg<byte> image2(image1.width() - 6, image1.height() - 6, 1, 3);
+	cimg_library::CImg<byte> image2(image1.width() - 80, image1.height() - 80, 1, 3);
 	size_t size1 = image1.width() * image1.height();
 	size_t size2 = image2.width() * image2.height();
 	byte *img1 = new byte[size1];
@@ -319,13 +319,13 @@ void checkGauss()
 	opencl_usu_2009::ByteID id2(img2, image2.width(), image2.height());
 	//id1.setInterestRect(270, 120, 140, 124);
 	//id2.setInterestRect(120, 20, 140, 124);
-	id1.gauss(id2, 1, 3);
-	id2.unload(img1);
-	memcpy(image1.data(), img1, size1);
-	memcpy(image1.data() + size1, img1, size1);
-	memcpy(image1.data() + 2 * size1, img1, size1);
-	image1.display();
-	image1.save("4.bmp");
+	id1.gauss(id2, 13, 40);
+	id2.unload(img2);
+	memcpy(image2.data(), img2, size2);
+	memcpy(image2.data() + size2, img2, size2);
+	memcpy(image2.data() + 2 * size2, img2, size2);
+	image2.display();
+	image2.save("4.bmp");
 	delete[] img1, img2;
 }
 
