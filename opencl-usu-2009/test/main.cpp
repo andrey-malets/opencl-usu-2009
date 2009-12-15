@@ -1,11 +1,13 @@
 #include "library.h"
 #include <iostream>
 
+int tests();
+
 template<typename IDType, typename Pixel> void testThreshold()
 {
 	std::cout << "start" << std::endl;
-	size_t width = 10000, height = 10000, size = width*height;
-	Pixel *data = new Pixel[size];
+	size_t width = 7000, height = 7000, size = width*height;
+		Pixel *data = new Pixel[size];
 	std::cout << "allocated" << std::endl;
 	for(size_t i = 0; i != size; ++i)
 		data[i] = i;
@@ -34,6 +36,7 @@ template<typename IDType, typename Pixel> void testThreshold()
 
 int main(int argc, const char** argv)
 {
-	testThreshold<opencl_usu_2009::UintID, cl_uint>();
+//	testThreshold<opencl_usu_2009::UintID, cl_uint>();
 //	testThreshold<opencl_usu_2009::FloatID, float>();
+	tests();
 }
