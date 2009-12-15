@@ -6,6 +6,7 @@ template<typename IDType, typename Pixel> void testThreshold()
 	std::cout << "start" << std::endl;
 	size_t width = 10000, height = 10000, size = width*height;
 	Pixel *data = new Pixel[size];
+	std::cout << "allocated" << std::endl;
 	for(size_t i = 0; i != size; ++i)
 		data[i] = i;
 

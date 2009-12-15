@@ -55,15 +55,7 @@ namespace opencl_usu_2009
 		static cl_context getContext() { return context; }
 		static cl_program getProgram() { return program; }
 
-		void execute(cl_kernel kernel)
-		{
-			size_t size = getIRWidth() * getIRHeight(), global = ((localWorkSize-1+size)/localWorkSize)*localWorkSize;
-			cl_int err = clEnqueueNDRangeKernel(getQueue(), kernel, 1, NULL, &global, &localWorkSize, 0, NULL, NULL);
-			check(err);
-
-			err = clFinish(getQueue());
-			check(err);
-		}
+		void execute(cl_kernel kernel);
 
 		void setCommonVariables(cl_kernel kernel, cl_uint start = 0) const;
 
@@ -162,20 +154,24 @@ namespace opencl_usu_2009
 		/* Make the gauss filtration of the interest rectangle and place it to dest */
 		void gauss(Identificator<Pixel, ClType> &other, const float sigma, const size_t n) const throw (APIException)
 		{
-			if(n % 2 == 0)
+			if(other.getIRWidth() != getIRWidth() - 2*n || other.getIRHeight() != getIRHeight() - 2*n)
 				throw DimensionException();
 
-			if(other.getIRWidth() != getIRWidth() - n + 1 || other.getIRHeight() != getIRHeight() - n + 1)
-				throw DimensionException();
+
+			cl_int err;
+			cl_mem gaussBuffer = clCreateBuffer(getContext(), CL_MEM_READ_WRITE, sizeof(cl_float)*(2*n+1)*(2*n+1), NULL, &err);
+			check(err);
 
 			setCommonVariables(gaussKernel);
 			other.setCommonVariables(gaussKernel, 7);
 
-			cl_int err;
 			err = clSetKernelArg(gaussKernel, 14, sizeof(cl_float), &sigma);
 			err = clSetKernelArg(gaussKernel, 15, sizeof(cl_uint), &n);
+			err = clSetKernelArg(gaussKernel, 16, sizeof(cl_mem), &gaussBuffer);
 
 			execute(gaussKernel);
+
+			clReleaseMemObject(gaussBuffer);
 		}
 
 		/* Make a copy of this buffer in the device memory */
