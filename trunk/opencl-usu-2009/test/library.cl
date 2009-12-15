@@ -97,7 +97,7 @@ __kernel void gauss_byte(
 		float res = 0;
 		for(int i = 0; i != (2*n+1)*(2*n+1); ++i)
 		{
-			int sindex = x0 + y0* width0 + (myId + i) % ir_width0 + width0 * ((myId + i) / ir_width0);
+			int sindex = x0 + y0* width0 + (myId + i - n - 1) % ir_width0 + width0 * ((myId + i - n - 1) / ir_width0);
 			res += v0[sindex] * w[i];
 		}
 
