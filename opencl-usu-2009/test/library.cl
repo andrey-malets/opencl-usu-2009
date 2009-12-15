@@ -95,12 +95,11 @@ __kernel void gauss_byte(
 	{
 		int dindex = x1 + y1 * width1 + myId % ir_width1 + width1 * (myId / ir_width1);
 		float res = 0;
-		for(int i = -n; i != n+1; ++i)
-			for(int j = -n; j != n+1; ++j)
-			{
-				int sindex = x0 + i + (y0 + j)* width0 + myId % ir_width0 + width0 * (myId / ir_width0);
-				res += v0[sindex] * w[(i+n)*(2*n+1)+(j+n)];
-			}
+		for(int i = 0; i != (2*n+1)*(2*n+1); ++i)
+		{
+			int sindex = x0 + y0* width0 + (myId + i) % ir_width0 + width0 * ((myId + i) / ir_width0);
+			res += v0[sindex] * w[i];
+		}
 
 		if(res > UCHAR_MAX)
 			v0[dindex] = UCHAR_MAX;
