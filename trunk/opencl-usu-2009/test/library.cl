@@ -102,12 +102,12 @@ __kernel void gauss_byte(
 		}
 
 		if(res > UCHAR_MAX)
-			v0[dindex] = UCHAR_MAX;
+			v1[dindex] = UCHAR_MAX;
 		else
 			if(res < 0)
-				v0[dindex] = 0;
+				v1[dindex] = 0;
 			else
-				v0[dindex] = res;
+				v1[dindex] = res;
 	}
 }
 
