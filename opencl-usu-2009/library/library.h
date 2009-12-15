@@ -55,7 +55,7 @@ namespace opencl_usu_2009
 		static cl_context getContext() { return context; }
 		static cl_program getProgram() { return program; }
 
-		void execute(cl_kernel kernel);
+		void execute(cl_kernel kernel) const;
 
 		void setCommonVariables(cl_kernel kernel, cl_uint start = 0) const;
 
@@ -156,7 +156,6 @@ namespace opencl_usu_2009
 		{
 			if(other.getIRWidth() != getIRWidth() - 2*n || other.getIRHeight() != getIRHeight() - 2*n)
 				throw DimensionException();
-
 
 			cl_int err;
 			cl_mem gaussBuffer = clCreateBuffer(getContext(), CL_MEM_READ_WRITE, sizeof(cl_float)*(2*n+1)*(2*n+1), NULL, &err);

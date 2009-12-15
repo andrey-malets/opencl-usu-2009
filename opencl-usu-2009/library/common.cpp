@@ -111,7 +111,7 @@ namespace opencl_usu_2009
 		check(err);
 	}
 
-	void Common::execute(cl_kernel kernel)
+	void Common::execute(cl_kernel kernel) const
 	{
 		size_t size = getIRWidth() * getIRHeight(), global = ((localWorkSize-1+size)/localWorkSize)*localWorkSize;
 		cl_int err = clEnqueueNDRangeKernel(getQueue(), kernel, 1, NULL, &global, &localWorkSize, 0, NULL, NULL);
