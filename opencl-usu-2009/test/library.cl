@@ -77,19 +77,21 @@ __kernel void gauss_byte(
 	__global float *w)
 {
 	int myId = get_global_id(0);
-	if(myId == 0)
-	{
-		float s = 0.0;
+
+	float s = 0.0;
+//	if(myId == 0)
+//	{
 		for(int i = 0; i != 2*n+1; ++i)
 			for(int j = 0; j != 2*n+1; ++j)
-				s+=(w[i*(2*n+1)+j] = 1/exp(((float) (i-n-1)*(i-n-1)+(j-n-1)*(j-n-1)) / (2 * sigma * sigma)));
+				s+=1/exp(((float) (i-n)*(i-n)+(j-n)*(j-n)) / (2 * sigma * sigma));
+//				s+=(w[i*(2*n+1)+j] = 1/exp(((float) (i-n)*(i-n)+(j-n)*(j-n)) / (2 * sigma * sigma)));
 					
-		for(int i = 0; i != (2*n+1)*(2*n+1); ++i)
-			w[i] /= s;
-	}
-	barrier(CLK_GLOBAL_MEM_FENCE);
+//		for(int i = 0; i != (2*n+1)*(2*n+1); ++i)
+//			w[i] /= s;
+//	}
+//	barrier(CLK_GLOBAL_MEM_FENCE);
 
-	if(myId <= ir_width1*ir_height1)
+	if(myId < ir_width1*ir_height1)
 	{
 		int dindex = x1 + y1 * width1 + myId % ir_width1 + width1 * (myId / ir_width1);
 		float res = 0;
@@ -97,12 +99,12 @@ __kernel void gauss_byte(
 			for(int j = 0; j != 2*n+1; ++j)
 			{
 				int sindex =
-					j + x0 + myId % ir_width1
-					+ (y0 + i + myId / ir_width1) * width0;
-
-				res += v0[sindex] * w[i*(2*n+1)+j];
+					(y0 + i + myId / ir_width1) * width0 +
+					j + x0 + myId % ir_width1;
+				res += v0[sindex] * 1/exp(((float) (i-n)*(i-n)+(j-n)*(j-n)) / (2 * sigma * sigma))/s;
+//				res += v0[sindex] * w[i*(2*n+1)+j];
 			}
-		
+
 		if(res > UCHAR_MAX)
 			v1[dindex] = UCHAR_MAX;
 		else
