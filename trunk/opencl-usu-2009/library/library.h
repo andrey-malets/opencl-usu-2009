@@ -17,8 +17,37 @@ namespace opencl_usu_2009
 	typedef unsigned char byte;
 
 	class LibraryException : public std::exception { };
-	class DimensionException : public LibraryException { };
-	class APIException : public LibraryException { };
+
+	class DimensionException : public LibraryException
+	{
+	public:
+		DimensionException(size_t expectedWidth, size_t expectedHeight, size_t actualWidth, size_t actualHeight)
+			: expectedWidth(expectedWidth),
+			  expectedHeight(expectedHeight),
+			  actualWidth(actualWidth),
+			  actualHeight(actualHeight)
+		{}
+
+		size_t getExpectedWidth() { return expectedWidth; }
+		size_t getExpectedHeight() { return expectedHeight; }
+
+		size_t getActualWidth() { return actualWidth; }
+		size_t getActualHeight() { return actualHeight; }
+
+	private:
+		size_t expectedWidth, expectedHeight, actualWidth, actualHeight;
+	};
+
+	class APIException : public LibraryException
+	{
+	public:
+		APIException(cl_int code): errorCode(code) { }
+		int getErrorCode() { return errorCode; }
+
+	private:
+		cl_int errorCode;
+	};
+
 	class OutOfMemoryException : public APIException { };
 
 	class Common
@@ -27,6 +56,9 @@ namespace opencl_usu_2009
 
 		/* File with kernels source code */
 		static const char *kernelsFile;
+
+		/* OpenCL compiler build options */
+		static const char *buildOptions;
 
 		/* Return image width */
 		size_t getWidth() const throw() { return width; }
@@ -55,7 +87,7 @@ namespace opencl_usu_2009
 		static cl_context getContext() { return context; }
 		static cl_program getProgram() { return program; }
 
-		void execute(cl_kernel kernel) const;
+		void execute(cl_kernel kernel, bool wait, size_t size) const;
 
 		void setCommonVariables(cl_kernel kernel, cl_uint start = 0) const;
 
@@ -84,7 +116,7 @@ namespace opencl_usu_2009
 		Identificator(const cimg_library::CImg<Pixel>& source) throw(APIException);
 
 		/* Create an image in the device memory from the pixel vector */
-		Identificator(const Pixel *source, const size_t width, const size_t height) throw(APIException) : Common(width, height)
+		Identificator(const Pixel *source, const size_t width, const size_t height, bool wait = true) throw(APIException) : Common(width, height)
 		{
 			init();
 			cl_int err;
@@ -92,7 +124,7 @@ namespace opencl_usu_2009
 			buffer = clCreateBuffer(getContext(), CL_MEM_READ_WRITE, size, (void *)source, &err);
 			check(err);
 
-			err = clEnqueueWriteBuffer(getQueue(), buffer, CL_TRUE, 0, size, source, 0, NULL, NULL);
+			err = clEnqueueWriteBuffer(getQueue(), buffer, wait ? CL_TRUE : CL_FALSE, 0, size, source, 0, NULL, NULL);
 			try { check(err); }
 			catch(...)
 			{
@@ -113,15 +145,15 @@ namespace opencl_usu_2009
 		}
 
 		/* Unload the image from device memory to the buffer at dest */
-		void unload(Pixel *dest) const throw (APIException)
+		void unload(Pixel *dest, bool wait = true) const throw (APIException)
 		{
-			cl_int err = clEnqueueReadBuffer(getQueue(), buffer, CL_TRUE, 0,
+			cl_int err = clEnqueueReadBuffer(getQueue(), buffer, wait ? CL_TRUE : CL_FALSE, 0,
 				sizeof(Pixel) * getWidth() * getHeight(), dest, 0, NULL, NULL);
 			check(err);
 		}
 
 		/* Apply threshold processing to the interest rectangle */
-		void trheshold(const Pixel value, const Pixel lessValue, const Pixel moreValue) throw (APIException)
+		void trheshold(const Pixel value, const Pixel lessValue, const Pixel moreValue, bool wait = true) throw (APIException)
 		{
 			setCommonVariables(thresholdKernel);
 
@@ -131,15 +163,16 @@ namespace opencl_usu_2009
 			err |= clSetKernelArg(thresholdKernel, 9, sizeof(ClType), (void *)&moreValue);
 			check(err);
 
-			execute(thresholdKernel);
+			execute(thresholdKernel, wait, getIRWidth() * getIRHeight());
 		}
 
 		/* Make the linear combination of interest rectangles of the current image and supplied image which
 		in this case must be of the same dimensions, exception is thrown otherwise */
-		void linearCombination(const Identificator<Pixel, ClType> &other, const float a, const float b) throw (APIException)
+		void linearCombination(const Identificator<Pixel, ClType> &other, const float a, const float b, bool wait = true)
+			throw (APIException)
 		{
 			if(other.getIRWidth() != getIRWidth() || other.getIRHeight() != getIRHeight())
-				throw DimensionException();
+				throw DimensionException(getIRWidth(), getIRHeight(), other.getIRWidth(), other.getIRHeight());
 
 			setCommonVariables(linearCombinationKernel);
 			other.setCommonVariables(linearCombinationKernel, 7);
@@ -148,17 +181,17 @@ namespace opencl_usu_2009
 			err = clSetKernelArg(linearCombinationKernel, 14, sizeof(cl_float), &a);
 			err = clSetKernelArg(linearCombinationKernel, 15, sizeof(cl_float), &b);
 
-			execute(linearCombinationKernel);
+			execute(linearCombinationKernel, wait, getIRWidth() * getIRHeight());
 		}
 
 		/* Make the gauss filtration of the interest rectangle and place it to dest */
-		void gauss(Identificator<Pixel, ClType> &other, const float sigma, const size_t n) const throw (APIException)
+		void gauss(Identificator<Pixel, ClType> &other, const float sigma, const size_t n, bool wait = true) const throw (APIException)
 		{
 			if(other.getIRWidth() != getIRWidth() - 2*n || other.getIRHeight() != getIRHeight() - 2*n)
-				throw DimensionException();
+				throw DimensionException(getIRWidth() - 2*n, getIRHeight() - 2*n, other.getIRWidth(), other.getIRHeight());
 
 			cl_int err;
-			cl_mem gaussBuffer = clCreateBuffer(getContext(), CL_MEM_READ_WRITE, sizeof(cl_float)*(2*n+1)*(2*n+1), NULL, &err);
+			cl_mem gaussBuffer = clCreateBuffer(getContext(), CL_MEM_READ_WRITE, sizeof(ClType)*(2*n+1)*(2*n+1), NULL, &err);
 			check(err);
 
 			setCommonVariables(gaussKernel);
@@ -169,7 +202,12 @@ namespace opencl_usu_2009
 			err = clSetKernelArg(gaussKernel, 16, sizeof(cl_mem), &gaussBuffer);
 			check(err);
 
-			execute(gaussKernel);
+			try { execute(gaussKernel, wait, other.getIRWidth() * other.getIRHeight()); }
+			catch(...)
+			{
+				clReleaseMemObject(gaussBuffer);
+				throw;
+			}
 
 			clReleaseMemObject(gaussBuffer);
 		}

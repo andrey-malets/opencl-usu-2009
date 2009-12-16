@@ -1,7 +1,26 @@
 #include "library.h"
+#include <vector>
 
 namespace opencl_usu_2009
 {
+	class DeviceVector
+	{
+	public:
+		DeviceVector(size_t capacity) : capacity(capacity)
+		{
+			if(capacity == 0)
+				throw LibraryException();
+			ptr = new cl_device_id[capacity];
+		}
+
+		~DeviceVector() { delete[] ptr; }
+		cl_device_id *p() { return ptr; }
+		cl_device_id get() { return ptr[0]; }
+	private:
+		cl_device_id *ptr;
+		size_t capacity;
+	};
+
 	Common::Common(size_t width, size_t height)
 	{
 		this->width = width;
@@ -29,7 +48,7 @@ namespace opencl_usu_2009
 	void Common::setInterestRect(const size_t x0, const size_t y0, const size_t width, const size_t height) throw (DimensionException)
 	{
 		if(x0+width > this->width || y0+height > this->height)
-			throw DimensionException();
+			throw DimensionException(this->width, this->height, x0+width, y0+height);
 
 		x = x0;
 		y = y0;
@@ -47,22 +66,12 @@ namespace opencl_usu_2009
 		err = clGetContextInfo(context, CL_CONTEXT_DEVICES, 0, NULL, &device_count);
 		check(err);
 
-		cl_device_id *devs = new cl_device_id[device_count];
-		err = clGetContextInfo(context, CL_CONTEXT_DEVICES, device_count, devs, NULL);
-		try { check(err); }
-		catch(...)
-		{
-			delete[] devs;
-			throw;
-		}
+		DeviceVector devs(device_count);
+		err = clGetContextInfo(context, CL_CONTEXT_DEVICES, device_count, devs.p(), NULL);
+		check(err);
 
-		command_queue = clCreateCommandQueue(context, devs[0], 0, &err);
-		try { check(err); }
-		catch(...)
-		{
-			delete[] devs;
-			throw;
-		}
+		command_queue = clCreateCommandQueue(context, devs.get(), 0, &err);
+		check(err);
 
 		std::ifstream in(kernelsFile);
 		if(!in)
@@ -80,9 +89,8 @@ namespace opencl_usu_2009
 		program = clCreateProgramWithSource(getContext(), 1, &ptr, NULL, &err);
 		check(err);
 
-		err = clBuildProgram(program, 1, devs, "", NULL, NULL);
+		err = clBuildProgram(program, 1, devs.p(), buildOptions, NULL, NULL);
 		check(err);
-		delete[] devs;
 	}
 
 	void Common::finalize()
@@ -94,8 +102,7 @@ namespace opencl_usu_2009
 
 	void Common::check(cl_int code)
 	{
-		/* TODO: init appropriate error code */
-		if(code != CL_SUCCESS) throw APIException();
+		if(code != CL_SUCCESS) throw APIException(code);
 	}
 
 	void Common::setCommonVariables(cl_kernel kernel, cl_uint start) const
@@ -111,14 +118,17 @@ namespace opencl_usu_2009
 		check(err);
 	}
 
-	void Common::execute(cl_kernel kernel) const
+	void Common::execute(cl_kernel kernel, bool wait, size_t size) const
 	{
-		size_t size = getIRWidth() * getIRHeight(), global = ((localWorkSize-1+size)/localWorkSize)*localWorkSize;
+		size_t global = (((localWorkSize-1+size)/localWorkSize)*localWorkSize);
 		cl_int err = clEnqueueNDRangeKernel(getQueue(), kernel, 1, NULL, &global, &localWorkSize, 0, NULL, NULL);
 		check(err);
 
-		err = clFinish(getQueue());
-		check(err);
+		if(wait)
+		{
+			err = clFinish(getQueue());
+			check(err);
+		}
 	}
 
 	cl_command_queue Common::command_queue;
@@ -127,4 +137,5 @@ namespace opencl_usu_2009
 	size_t Common::refcount = 0;
 	size_t Common::localWorkSize = 256;
 	const char *Common::kernelsFile = "library.cl";
+	const char *Common::buildOptions = "";
 }
