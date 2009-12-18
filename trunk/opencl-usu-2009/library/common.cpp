@@ -136,6 +136,6 @@ namespace opencl_usu_2009
 	cl_program Common::program;
 	size_t Common::refcount = 0;
 	size_t Common::localWorkSize = 256;
-	const char *Common::kernelsFile = "library.cl";
+	const char *Common::kernelsFile = "library.c";
 	const char *Common::buildOptions = "";
 }

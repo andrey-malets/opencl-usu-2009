@@ -29,8 +29,8 @@ struct gp
 const size_t repeateCount = 1;
 const size_t executeCount = 1;
 // Array of dimentions
-//const size d[] = {{320, 240}, {640, 480}, {1024, 768}, {1280, 1024}};
-const size d[] = {{4000, 3500}, {4500, 4000}, {5000, 4500}, {6000, 5500}, {10000, 10000}};
+const size d[] = {{320, 240}, {640, 480}, {1024, 768}};
+//const size d[] = {{4000, 3500}, {4500, 4000}, {5000, 4500}, {6000, 5500}};
 const std::vector<size> dimentions(d, d + sizeof(d) / sizeof(size));
 std::vector<std::vector<double> > values(sizeof(d) / sizeof(size), std::vector<double>(repeateCount, 0));
 const gp g[] = {{1, 3}, {2, 6}, {3, 9}, {4, 12}};
@@ -213,40 +213,34 @@ void gaussCpu(double sigma, unsigned char radius)
 
 int tests()
 {
-	byte b[100];
-	opencl_usu_2009::ByteID f(b, 10, 10);
-/*
-	checkThreshold();
-	return 1;
-	checkLinear();
-	return 1;
-
-*/
+	//checkThreshold();
+	//return 1;
+	//checkLinear();
+	//return 1;
 	checkGauss();
 	return 1;
 
-/*
 	srand(clock());
 
-	// Treshold OpenCL
-	std::cout << "Threshold OpenCL" << std::endl;
-	thresholdOpencl();
-	printAverage(values);
+	//// Treshold OpenCL
+	//std::cout << "Threshold OpenCL" << std::endl;
+	//thresholdOpencl();
+	//printAverage(values);
 
-	// Treshold CPU
-	std::cout << "Threshold CPU" << std::endl;
-	thresholdCpu();
-	printAverage(values);
+	//// Treshold CPU
+	//std::cout << "Threshold CPU" << std::endl;
+	//thresholdCpu();
+	//printAverage(values);
 
-	// LinearCombination OpenCL
-	std::cout << "LinearCombination OpenCL" << std::endl;
-	linearCombinationOpencl();
-	printAverage(values);
+	//// LinearCombination OpenCL
+	//std::cout << "LinearCombination OpenCL" << std::endl;
+	//linearCombinationOpencl();
+	//printAverage(values);
 
-	// LinearCombination CPU
-	std::cout << "LinearCombination CPU" << std::endl;
-	linearCombinationCpu();
-	printAverage(values);
+	//// LinearCombination CPU
+	//std::cout << "LinearCombination CPU" << std::endl;
+	//linearCombinationCpu();
+	//printAverage(values);
 
 	//std::cout << "Gauss OpenCL" << std::endl;
 	//for ( int i = 0; i != gauss.size(); ++ i)
@@ -265,7 +259,7 @@ int tests()
 	//	printAverage(values);
 	//}
 
-	return 1; */
+	//return 1;
 }
 
 void checkThreshold()
@@ -313,7 +307,7 @@ void checkLinear()
 
 void checkGauss()
 {
-	size_t n = 20;
+	size_t n = 30;
 	float sigma = n/3.f;
 
 	cimg_library::CImg<byte> image1("3.bmp");
