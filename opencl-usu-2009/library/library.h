@@ -185,31 +185,24 @@ namespace opencl_usu_2009
 		}
 
 		/* Make the gauss filtration of the interest rectangle and place it to dest */
-		void gauss(Identificator<Pixel, ClType> &other, const float sigma, const size_t n, bool wait = true) const throw (APIException)
+		void gauss(Identificator<Pixel, ClType> &other, const float sigma, const size_t n, bool wait = true) const throw (APIException, LibraryException)
 		{
+			if(n > 50)
+				throw LibraryException();
+
 			if(other.getIRWidth() != getIRWidth() - 2*n || other.getIRHeight() != getIRHeight() - 2*n)
 				throw DimensionException(getIRWidth() - 2*n, getIRHeight() - 2*n, other.getIRWidth(), other.getIRHeight());
 
 			cl_int err;
-			cl_mem gaussBuffer = clCreateBuffer(getContext(), CL_MEM_READ_WRITE, sizeof(ClType)*(2*n+1)*(2*n+1), NULL, &err);
-			check(err);
 
 			setCommonVariables(gaussKernel);
 			other.setCommonVariables(gaussKernel, 7);
 
 			err = clSetKernelArg(gaussKernel, 14, sizeof(cl_float), &sigma);
 			err = clSetKernelArg(gaussKernel, 15, sizeof(cl_uint), &n);
-			err = clSetKernelArg(gaussKernel, 16, sizeof(cl_mem), &gaussBuffer);
 			check(err);
 
-			try { execute(gaussKernel, wait, other.getIRWidth() * other.getIRHeight()); }
-			catch(...)
-			{
-				clReleaseMemObject(gaussBuffer);
-				throw;
-			}
-
-			clReleaseMemObject(gaussBuffer);
+			execute(gaussKernel, wait, other.getIRWidth() * other.getIRHeight());
 		}
 
 		/* Make a copy of this buffer in the device memory */
