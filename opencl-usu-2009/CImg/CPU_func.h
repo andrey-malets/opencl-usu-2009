@@ -31,7 +31,7 @@ void LineComb(const CImg<unsigned char>& Ik, const CImg<unsigned char>& Ii, CImg
 //3. Гауссова фильтрация с параметрами sigma - параметр гауссиана, n - размер локального окна
 //GB(x,y) = 1/(2*pi*sigma*sigma) * exp( - (x*x + y*y) / (2 * sigma*sigma))
 // blur: true - размытие, false - повышние резкости
-void GaussBlur(CImg<unsigned char>& input, double sigma, const unsigned char n, const bool blur = true)
+template<typename Data> void GaussBlur(CImg<Data>& input, double sigma, const unsigned char n, const bool blur = true)
 {
 #define M_PI       3.14159265358979323846
 
@@ -51,7 +51,7 @@ void GaussBlur(CImg<unsigned char>& input, double sigma, const unsigned char n, 
 	if (!blur)
 		mask[2*(n+1)*n] += 2;
 
-	CImg<unsigned char> additioanl(input.width(), input.height(), 1, 3);
+	CImg<Data> additioanl(input.width(), input.height(), 1, 3);
 	additioanl.fill(0);
 
 	int length = input.width() * input.height();
@@ -67,10 +67,9 @@ void GaussBlur(CImg<unsigned char>& input, double sigma, const unsigned char n, 
 				int index = i + l + j*width;
 				if ( index >= 0 && index < length)
 					newpix += mask[(l+n) + (j+n)*(2*n+1)] * input.data()[index];
-
 			}
 
-		BYTE res = (BYTE) newpix;
+		Data res = (Data) newpix;
 		if (s > 255)
 			res = 255;
 		if (s < 0)

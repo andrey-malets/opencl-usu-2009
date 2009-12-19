@@ -115,6 +115,15 @@ namespace opencl_usu_2009
 		/* Create an image in the device memory from CImg image source */
 		Identificator(const cimg_library::CImg<Pixel>& source) throw(APIException);
 
+		Identificator(const size_t width, const size_t height, bool wait = true) throw(APIException) : Common(width, height)
+		{
+			init();
+			cl_int err;
+			size_t size = sizeof(Pixel) * getWidth() * getHeight();
+			buffer = clCreateBuffer(getContext(), CL_MEM_READ_WRITE, size, NULL, &err);
+			check(err);
+		}
+
 		/* Create an image in the device memory from the pixel vector */
 		Identificator(const Pixel *source, const size_t width, const size_t height, bool wait = true) throw(APIException) : Common(width, height)
 		{

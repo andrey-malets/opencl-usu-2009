@@ -5,14 +5,15 @@
 #include "CImg/CImg.h"
 #include "../CImg/CPU_func.h"
 
-void fillRandomBytes(byte*, size_t);
+template<typename Data> void fillRandomBytes(Data*, size_t);
+template<typename Data> cimg_library::CImg<Data>* arrayToCImg(Data *, size_t, size_t);
+
 void average(std::vector<double>, double*, double*);
-cimg_library::CImg<byte>* byteToCImg(byte[], size_t, size_t);
 void printAverage(std::vector<std::vector<double> >);
 
 void checkThreshold();
 void checkLinear();
-void checkGauss();
+template <typename Data, typename VData> void checkGauss();
 
 struct size
 {
@@ -27,13 +28,13 @@ struct gp
 };
 
 const size_t repeateCount = 1;
-const size_t executeCount = 1;
+const size_t executeCount = 100;
 // Array of dimentions
 const size d[] = {{320, 240}, {640, 480}, {800, 600}, {1024, 768}, {2048, 1536}};
 //const size d[] = {{4000, 3500}, {4500, 4000}, {5000, 4500}, {6000, 5500}};
 const std::vector<size> dimentions(d, d + sizeof(d) / sizeof(size));
 std::vector<std::vector<double> > values(sizeof(d) / sizeof(size), std::vector<double>(repeateCount, 0));
-const gp g[] = {{1, 3}, {4, 12}};
+const gp g[] = {{1, 3}, {4, 12}, {5, 15}};
 const std::vector<gp> gauss(g, g + sizeof(g) / sizeof(gp));
 
 void thresholdOpencl()
@@ -102,15 +103,15 @@ void gaussOpencl(float sigma, byte radius)
 	{
 		// Create image
 		size_t size = dimentions[i].height * dimentions[i].width; // image size
-		byte *img = new byte[size];
-		fillRandomBytes(img, size);
+		float *img = new float[size];
+		fillRandomBytes<float>(img, size);
 
 		for (int k = 0; k != repeateCount; ++k)
 		{
 			// Timing
 			c = clock();
-			opencl_usu_2009::ByteID id(img, dimentions[i].width, dimentions[i].height);
-			opencl_usu_2009::ByteID id2(img, dimentions[i].width - 2 * radius, dimentions[i].height - 2 * radius);
+			opencl_usu_2009::FloatID id(img, dimentions[i].width, dimentions[i].height);
+			opencl_usu_2009::FloatID id2(dimentions[i].width - 2 * radius, dimentions[i].height - 2 * radius);
 			for (int y = 0; y != executeCount; ++ y)
 				id.gauss(id2, sigma, radius);
 			id.unload(img);
@@ -134,7 +135,7 @@ void thresholdCpu()
 		size_t size = dimentions[i].height * dimentions[i].width; // image size
 		byte *img = new byte[size];
 		fillRandomBytes(img, size);
-		cimg_library::CImg<byte> *image = byteToCImg(img, dimentions[i].width, dimentions[i].height);
+		cimg_library::CImg<byte> *image = arrayToCImg(img, dimentions[i].width, dimentions[i].height);
 
 		for (int k = 0; k != repeateCount; ++k)
 		{
@@ -164,8 +165,8 @@ void linearCombinationCpu()
 		byte *img = new byte[size], *img2 = new byte[size];
 		fillRandomBytes(img, size);
 		fillRandomBytes(img2, size);
-		cimg_library::CImg<byte> *image = byteToCImg(img, dimentions[i].width, dimentions[i].height);
-		cimg_library::CImg<byte> *image2 = byteToCImg(img2, dimentions[i].width, dimentions[i].height);
+		cimg_library::CImg<byte> *image = arrayToCImg(img, dimentions[i].width, dimentions[i].height);
+		cimg_library::CImg<byte> *image2 = arrayToCImg(img2, dimentions[i].width, dimentions[i].height);
 
 		for (int k = 0; k != repeateCount; ++k)
 		{
@@ -192,9 +193,9 @@ void gaussCpu(double sigma, unsigned char radius)
 	{
 		// Create image
 		size_t size = dimentions[i].height * dimentions[i].width; // image size
-		byte *img = new byte[size];
+		float *img = new float[size];
 		fillRandomBytes(img, size);
-		cimg_library::CImg<byte> *image = byteToCImg(img, dimentions[i].width, dimentions[i].height);
+		cimg_library::CImg<float> *image = arrayToCImg(img, dimentions[i].width, dimentions[i].height);
 
 		for (int k = 0; k != repeateCount; ++k)
 		{
@@ -213,44 +214,43 @@ void gaussCpu(double sigma, unsigned char radius)
 
 int tests()
 {
-	byte *dummy = new byte[100];
-	opencl_usu_2009::ByteID x(dummy, 10, 10);
+	opencl_usu_2009::ByteID x(10, 10);
 	//checkThreshold();
 	//return 1;
 	//checkLinear();
 	//return 1;
-	//checkGauss();
+	//checkGauss<byte, cl_uchar>();
 	//return 1;
 
-	srand(clock());
+	//srand(clock());
 
-	// Treshold OpenCL
-	std::cout << "Threshold OpenCL" << std::endl;
-	thresholdOpencl();
-	printAverage(values);
+	//// Treshold OpenCL
+	//std::cout << "Threshold OpenCL" << std::endl;
+	//thresholdOpencl();
+	//printAverage(values);
 
-	// Treshold CPU
-	std::cout << "Threshold CPU" << std::endl;
-	thresholdCpu();
-	printAverage(values);
+	//// Treshold CPU
+	//std::cout << "Threshold CPU" << std::endl;
+	//thresholdCpu();
+	//printAverage(values);
 
-	// LinearCombination OpenCL
-	std::cout << "LinearCombination OpenCL" << std::endl;
-	linearCombinationOpencl();
-	printAverage(values);
+	//// LinearCombination OpenCL
+	//std::cout << "LinearCombination OpenCL" << std::endl;
+	//linearCombinationOpencl();
+	//printAverage(values);
 
-	// LinearCombination CPU
-	std::cout << "LinearCombination CPU" << std::endl;
-	linearCombinationCpu();
-	printAverage(values);
+	//// LinearCombination CPU
+	//std::cout << "LinearCombination CPU" << std::endl;
+	//linearCombinationCpu();
+	//printAverage(values);
 
-	std::cout << "Gauss OpenCL" << std::endl;
-	for ( int i = 0; i != gauss.size(); ++ i)
-	{
-		std::cout << gauss[i].s << " " << gauss[i].r << std::endl;
-		gaussOpencl(gauss[i].s, gauss[i].r);
-		printAverage(values);
-	}
+	//std::cout << "Gauss OpenCL" << std::endl;
+	//for ( int i = 0; i != gauss.size(); ++ i)
+	//{
+	//	std::cout << gauss[i].s << " " << gauss[i].r << std::endl;
+	//	gaussOpencl(gauss[i].s, gauss[i].r);
+	//	printAverage(values);
+	//}
 
 	// Gauss CPU
 	std::cout << "Gauss CPU" << std::endl;
@@ -261,8 +261,7 @@ int tests()
 		printAverage(values);
 	}
 
-	delete[] dummy;
-	return 1;
+	return 0;
 }
 
 void checkThreshold()
@@ -308,39 +307,40 @@ void checkLinear()
 }
 
 
-void checkGauss()
+template <typename Data, typename VData> void checkGauss()
 {
-	size_t n = 10;
+	size_t n = 50;
 	float sigma = n/3.f;
 
-	cimg_library::CImg<byte> image1("3.bmp");
-	cimg_library::CImg<byte> image2(image1.width() - 2*n, image1.height() - 2*n, 1, 3);
+	cimg_library::CImg<Data> image1("3.bmp");
+	cimg_library::CImg<Data> image2(image1.width() - 2*n, image1.height() - 2*n, 1, 3);
 	size_t size1 = image1.width() * image1.height();
 	size_t size2 = image2.width() * image2.height();
-	byte *img1 = new byte[size1];
-	byte *img2 = new byte[size2];
-	memcpy(img1, image1.data(), size1);
-	memcpy(img2, image2.data(), size2);
-	opencl_usu_2009::ByteID id1(img1, image1.width(), image1.height());
-	opencl_usu_2009::ByteID id2(img2, image2.width(), image2.height());
+	Data *img1 = new Data[size1];
+	Data *img2 = new Data[size2];
+	memcpy(img1, image1.data(), size1*sizeof(Data));
+	memcpy(img2, image2.data(), size2*sizeof(Data));
+
+	opencl_usu_2009::Identificator<Data, VData> id1(img1, image1.width(), image1.height());
+	opencl_usu_2009::Identificator<Data, VData> id2(image2.width(), image2.height());
 	//id1.setInterestRect(270, 120, 140, 124);
 	//id2.setInterestRect(120, 20, 140, 124);
 	id1.gauss(id2, sigma, n);
 	id2.unload(img2);
-	memcpy(image2.data(), img2, size2);
-	memcpy(image2.data() + size2, img2, size2);
-	memcpy(image2.data() + 2 * size2, img2, size2);
+	memcpy(image2.data(), img2, size2*sizeof(Data));
+	memcpy(image2.data() + size2, img2, size2*sizeof(Data));
+	memcpy(image2.data() + 2 * size2, img2, size2*sizeof(Data));
 	image2.display();
 	image2.save("4.bmp");
 	delete[] img1, img2;
 }
 
 
-void fillRandomBytes(byte *buffer, size_t size)
+template <class Data> void fillRandomBytes(Data *buffer, size_t size)
 {
 	srand(clock());
 	for(size_t i = 0; i != size; ++i)
-		buffer[i] = rand() % 256;
+		buffer[i] = (Data) (rand() % 256);
 }
 
 void average(std::vector<double> vec, double *mm, double *dd)
@@ -359,13 +359,13 @@ void average(std::vector<double> vec, double *mm, double *dd)
 	*mm = m, *dd = d;
 }
 
-cimg_library::CImg<byte>* byteToCImg(byte buffer[], size_t width, size_t height)
+template <typename Data> cimg_library::CImg<Data> *arrayToCImg(Data *buffer, size_t width, size_t height)
 {
 	size_t size = width * height;
-	cimg_library::CImg<byte> *img = new cimg_library::CImg<byte>(width, height, 1, 3);
-	memcpy(img->data(), buffer, size);
-	memcpy(img->data() + size, buffer, size);
-	memcpy(img->data() + 2 * size, buffer, size);
+	cimg_library::CImg<Data> *img = new cimg_library::CImg<Data>(width, height, 1, 3);
+	memcpy(img->data(), buffer, size * sizeof(Data));
+	memcpy(img->data() + size, buffer, size * sizeof(Data));
+	memcpy(img->data() + 2 * size, buffer, size * sizeof(Data));
 	return img;
 }
 
