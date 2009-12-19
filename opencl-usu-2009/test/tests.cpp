@@ -29,11 +29,11 @@ struct gp
 const size_t repeateCount = 1;
 const size_t executeCount = 1;
 // Array of dimentions
-const size d[] = {{320, 240}, {640, 480}, {1024, 768}};
+const size d[] = {{320, 240}, {640, 480}, {800, 600}, {1024, 768}, {2048, 1536}};
 //const size d[] = {{4000, 3500}, {4500, 4000}, {5000, 4500}, {6000, 5500}};
 const std::vector<size> dimentions(d, d + sizeof(d) / sizeof(size));
 std::vector<std::vector<double> > values(sizeof(d) / sizeof(size), std::vector<double>(repeateCount, 0));
-const gp g[] = {{1, 3}, {2, 6}, {3, 9}, {4, 12}};
+const gp g[] = {{1, 3}, {4, 12}};
 const std::vector<gp> gauss(g, g + sizeof(g) / sizeof(gp));
 
 void thresholdOpencl()
@@ -213,53 +213,56 @@ void gaussCpu(double sigma, unsigned char radius)
 
 int tests()
 {
+	byte *dummy = new byte[100];
+	opencl_usu_2009::ByteID x(dummy, 10, 10);
 	//checkThreshold();
 	//return 1;
 	//checkLinear();
 	//return 1;
-	checkGauss();
-	return 1;
+	//checkGauss();
+	//return 1;
 
 	srand(clock());
 
-	//// Treshold OpenCL
-	//std::cout << "Threshold OpenCL" << std::endl;
-	//thresholdOpencl();
-	//printAverage(values);
+	// Treshold OpenCL
+	std::cout << "Threshold OpenCL" << std::endl;
+	thresholdOpencl();
+	printAverage(values);
 
-	//// Treshold CPU
-	//std::cout << "Threshold CPU" << std::endl;
-	//thresholdCpu();
-	//printAverage(values);
+	// Treshold CPU
+	std::cout << "Threshold CPU" << std::endl;
+	thresholdCpu();
+	printAverage(values);
 
-	//// LinearCombination OpenCL
-	//std::cout << "LinearCombination OpenCL" << std::endl;
-	//linearCombinationOpencl();
-	//printAverage(values);
+	// LinearCombination OpenCL
+	std::cout << "LinearCombination OpenCL" << std::endl;
+	linearCombinationOpencl();
+	printAverage(values);
 
-	//// LinearCombination CPU
-	//std::cout << "LinearCombination CPU" << std::endl;
-	//linearCombinationCpu();
-	//printAverage(values);
+	// LinearCombination CPU
+	std::cout << "LinearCombination CPU" << std::endl;
+	linearCombinationCpu();
+	printAverage(values);
 
-	//std::cout << "Gauss OpenCL" << std::endl;
-	//for ( int i = 0; i != gauss.size(); ++ i)
-	//{
-	//	std::cout << gauss[i].s << " " << gauss[i].r << std::endl;
-	//	gaussOpencl(gauss[i].s, gauss[i].r);
-	//	printAverage(values);
-	//}
+	std::cout << "Gauss OpenCL" << std::endl;
+	for ( int i = 0; i != gauss.size(); ++ i)
+	{
+		std::cout << gauss[i].s << " " << gauss[i].r << std::endl;
+		gaussOpencl(gauss[i].s, gauss[i].r);
+		printAverage(values);
+	}
 
-	//// Gauss CPU
-	//std::cout << "Gauss CPU" << std::endl;
-	//for ( int i = 0; i != gauss.size(); ++ i)
-	//{
-	//	std::cout << gauss[i].s << " " << gauss[i].r << std::endl;
-	//	gaussCpu(gauss[i].s, gauss[i].r);
-	//	printAverage(values);
-	//}
+	// Gauss CPU
+	std::cout << "Gauss CPU" << std::endl;
+	for ( int i = 0; i != gauss.size(); ++ i)
+	{
+		std::cout << gauss[i].s << " " << gauss[i].r << std::endl;
+		gaussCpu(gauss[i].s, gauss[i].r);
+		printAverage(values);
+	}
 
-	//return 1;
+	delete[] dummy;
+	return 1;
 }
 
 void checkThreshold()
@@ -270,7 +273,7 @@ void checkThreshold()
 	memcpy(img, image.data(), size);
 	opencl_usu_2009::ByteID id(img, image.width(), image.height());
 	//id.setInterestRect(220, 220, 240, 240);
-	id.trheshold(0, 0, 255);
+	id.trheshold(100, 0, 255);
 	id.unload(img);
 	memcpy(image.data(), img, size);
 	memcpy(image.data() + size, img, size);
@@ -294,7 +297,7 @@ void checkLinear()
 	opencl_usu_2009::ByteID id2(img2, image2.width(), image2.height());
 	id1.setInterestRect(270, 120, 140, 124);
 	id2.setInterestRect(120, 20, 140, 124);
-	id1.linearCombination(id2, 0.5f, -0.1f);
+	id1.linearCombination(id2, 0.5f, 0.1f);
 	id1.unload(img1);
 	memcpy(image1.data(), img1, size1);
 	memcpy(image1.data() + size1, img1, size1);
@@ -307,7 +310,7 @@ void checkLinear()
 
 void checkGauss()
 {
-	size_t n = 30;
+	size_t n = 10;
 	float sigma = n/3.f;
 
 	cimg_library::CImg<byte> image1("3.bmp");

@@ -59,7 +59,7 @@ namespace opencl_usu_2009
 	void Common::init()
 	{
 		cl_int err;
-		context = clCreateContextFromType(0, CL_DEVICE_TYPE_GPU, NULL, NULL, &err);
+		context = clCreateContextFromType(0, CL_DEVICE_TYPE_DEFAULT, NULL, NULL, &err);
 		check(err);
 
 		size_t device_count;
@@ -95,9 +95,10 @@ namespace opencl_usu_2009
 
 	void Common::finalize()
 	{
-		clReleaseCommandQueue(command_queue);
-		clReleaseContext(context);
-		clReleaseProgram(program);
+		cl_int e;
+		e = clReleaseCommandQueue(command_queue);
+		e |= clReleaseContext(context);
+		e |= clReleaseProgram(program);
 	}
 
 	void Common::check(cl_int code)
