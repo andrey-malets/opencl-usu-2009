@@ -178,35 +178,35 @@ __kernel void gauss_float(
 						  uint ir_height1,
 
 						  float sigma,
-						  uint n,
-						  __global float *w)
+						  uint n)
 {
+	float w[51*51]; // this is 10 kb of local memory
 	int myId = get_global_id(0);
-	if(myId == 0)
-	{
-		float s = 0.0;
-		for(int i = 0; i != 2*n+1; ++i)
-			for(int j = 0; j != 2*n+1; ++j)
-				s+=(w[i*(2*n+1)+j] = 1/exp(((float) (i-n-1)*(i-n-1)+(j-n-1)*(j-n-1)) / (2 * sigma * sigma)));
 
-		for(int i = 0; i != (2*n+1)*(2*n+1); ++i)
-			w[i] /= s;
-	}
-	barrier(CLK_GLOBAL_MEM_FENCE);
+	float s = 0.0;
+	for(int i = 0; i != n; ++i)
+		for(int j = 0; j != n; ++j)
+			s+=(w[i*(n+1)+j] = exp(-((float) i*i+j*j) / (2 * sigma * sigma)));
+
+	s *= 4; // not precisely accurate, but fast
+	for(int i = 0; i != (n+1)*(n+1); ++i)
+		w[i] /= s;
 
 	if(myId < ir_width1*ir_height1)
 	{
 		int dindex = x1 + y1 * width1 + myId % ir_width1 + width1 * (myId / ir_width1);
 		float res = 0;
-		for(int i = 0; i != 2*n+1; ++i)
-			for(int j = 0; j != 2*n+1; ++j)
+		for(int i = -n; i != n; ++i)
+			for(int j = -n; j != n; ++j)
 			{
+				int i1 = i < 0 ? -i : i, j1 = j < 0 ? -j : j;
 				int sindex =
-					j + x0 + myId % ir_width1
-					+ (y0 + i + myId / ir_width1) * width0;
-
-				res += v0[sindex] * w[i*(2*n+1)+j];
+					(y0 + (i + n) + myId / ir_width1) * width0 +
+					(j + n) + x0 + myId % ir_width1;
+				res += v0[sindex] * w[i1*(n+1)+j1];
 			}
+
+		v1[dindex] = res;
 	}
 }
 
