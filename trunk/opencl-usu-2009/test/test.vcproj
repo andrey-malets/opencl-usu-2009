@@ -215,7 +215,6 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="oclUtils32.lib shrUtils32.lib OpenCL.lib library.lib"
-				OutputFile="X:\opencl\$(ProjectName).exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../lib;../../lib/$(PlatformName);../../lib/$(ConfigurationName)/$(PlatformName)"
 				GenerateDebugInformation="true"
