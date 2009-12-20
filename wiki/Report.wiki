@@ -5,7 +5,7 @@
  * *Процессор*: Intel Core 2 Duo E4500
  * *Видеокарта*: NVidia GeForce 8500GT
  * *ОС*: Windows Server 2003 64-bit standard edition
- * *Видеодрайвер*: NVIDIA Drivers for WinXP (185.85)
+ * *Видеодрайвер*: NVIDIA Drivers for WinXP (190.89)
 
 === Тесты ===
 
