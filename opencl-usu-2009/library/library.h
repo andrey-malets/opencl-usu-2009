@@ -112,6 +112,10 @@ namespace opencl_usu_2009
 	template<typename Pixel, typename ClType> class Identificator : public Common
 	{
 	public:
+
+		typedef Pixel Data;
+		typedef ClType ClData;
+
 		/* Create an image in the device memory from CImg image source */
 		Identificator(const cimg_library::CImg<Pixel>& source) throw(APIException);
 

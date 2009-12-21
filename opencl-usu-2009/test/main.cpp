@@ -1,6 +1,10 @@
 #include "library.h"
 #include <iostream>
 
+using opencl_usu_2009::ByteID;
+using opencl_usu_2009::FloatID;
+using opencl_usu_2009::UintID;
+
 int tests();
 
 template<typename IDType, typename Pixel> void testThreshold()
@@ -34,9 +38,36 @@ template<typename IDType, typename Pixel> void testThreshold()
 	delete [] data;
 }
 
+//template<typename Data> double times(Data &functor)
+//{
+//	clock_t c = clock();
+//	functor();
+//	return (clock() - c) * 1. / CLOCKS_PER_SEC;
+//}
+//
+//template<typename Data> class Runner
+//{
+//public:
+//	Runner(Data &value) : value(value), n(n) { }
+//	void operator()() { for(size_t i = 0; i != size; ++i) value(); }
+//private:
+//	Data value;
+//	size_t n;
+//};
+//
+//template<typename Type> class OpenCLThresholdTest
+//{
+//public:
+//	OpenCLThresholdTest(size_t width, size_t height) { }
+//
+//private:
+//
+//};
+//
+
 int main(int argc, const char** argv)
 {
-//	testThreshold<opencl_usu_2009::UintID, cl_uint>();
+//	testThreshold<UintID, UintID::Data>();
 //	testThreshold<opencl_usu_2009::FloatID, float>();
 	tests();
 }
