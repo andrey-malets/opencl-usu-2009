@@ -13,7 +13,7 @@ void printAverage(std::vector<std::vector<double> >);
 
 void checkThreshold();
 void checkLinear();
-template <typename Data, typename VData> void checkGauss();
+template <typename LibType> void checkGauss();
 
 struct size
 {
@@ -23,18 +23,18 @@ struct size
 
 struct gp
 {
-	size_t s;
+	float s;
 	size_t r;
 };
 
-const size_t repeateCount = 1;
-const size_t executeCount = 100;
+const size_t repeateCount = 10;
+const size_t executeCount = 1;
 // Array of dimentions
 const size d[] = {{320, 240}, {640, 480}, {800, 600}, {1024, 768}, {2048, 1536}};
 //const size d[] = {{4000, 3500}, {4500, 4000}, {5000, 4500}, {6000, 5500}};
 const std::vector<size> dimentions(d, d + sizeof(d) / sizeof(size));
 std::vector<std::vector<double> > values(sizeof(d) / sizeof(size), std::vector<double>(repeateCount, 0));
-const gp g[] = {{1, 3}, {4, 12}, {5, 15}};
+const gp g[] = {{1.f, 3}, {2.f, 6}, {4.f, 12}};
 const std::vector<gp> gauss(g, g + sizeof(g) / sizeof(gp));
 
 void thresholdOpencl()
@@ -219,38 +219,38 @@ int tests()
 	//return 1;
 	//checkLinear();
 	//return 1;
-	//checkGauss<byte, cl_uchar>();
+	//checkGauss<opencl_usu_2009::FloatID>();
 	//return 1;
 
-	//srand(clock());
+	srand(clock());
 
-	//// Treshold OpenCL
-	//std::cout << "Threshold OpenCL" << std::endl;
-	//thresholdOpencl();
-	//printAverage(values);
+	// Treshold OpenCL
+	std::cout << "Threshold OpenCL" << std::endl;
+	thresholdOpencl();
+	printAverage(values);
 
-	//// Treshold CPU
-	//std::cout << "Threshold CPU" << std::endl;
-	//thresholdCpu();
-	//printAverage(values);
+	// Treshold CPU
+	std::cout << "Threshold CPU" << std::endl;
+	thresholdCpu();
+	printAverage(values);
 
-	//// LinearCombination OpenCL
-	//std::cout << "LinearCombination OpenCL" << std::endl;
-	//linearCombinationOpencl();
-	//printAverage(values);
+	// LinearCombination OpenCL
+	std::cout << "LinearCombination OpenCL" << std::endl;
+	linearCombinationOpencl();
+	printAverage(values);
 
-	//// LinearCombination CPU
-	//std::cout << "LinearCombination CPU" << std::endl;
-	//linearCombinationCpu();
-	//printAverage(values);
+	// LinearCombination CPU
+	std::cout << "LinearCombination CPU" << std::endl;
+	linearCombinationCpu();
+	printAverage(values);
 
-	//std::cout << "Gauss OpenCL" << std::endl;
-	//for ( int i = 0; i != gauss.size(); ++ i)
-	//{
-	//	std::cout << gauss[i].s << " " << gauss[i].r << std::endl;
-	//	gaussOpencl(gauss[i].s, gauss[i].r);
-	//	printAverage(values);
-	//}
+	std::cout << "Gauss OpenCL" << std::endl;
+	for ( int i = 0; i != gauss.size(); ++ i)
+	{
+		std::cout << gauss[i].s << " " << gauss[i].r << std::endl;
+		gaussOpencl(gauss[i].s, gauss[i].r);
+		printAverage(values);
+	}
 
 	// Gauss CPU
 	std::cout << "Gauss CPU" << std::endl;
@@ -307,29 +307,29 @@ void checkLinear()
 }
 
 
-template <typename Data, typename VData> void checkGauss()
+template <typename LibType> void checkGauss()
 {
-	size_t n = 50;
+	size_t n = 20;
 	float sigma = n/3.f;
 
-	cimg_library::CImg<Data> image1("3.bmp");
-	cimg_library::CImg<Data> image2(image1.width() - 2*n, image1.height() - 2*n, 1, 3);
+	cimg_library::CImg<LibType::Data> image1("3.bmp");
+	cimg_library::CImg<LibType::Data> image2(image1.width() - 2*n, image1.height() - 2*n, 1, 3);
 	size_t size1 = image1.width() * image1.height();
 	size_t size2 = image2.width() * image2.height();
-	Data *img1 = new Data[size1];
-	Data *img2 = new Data[size2];
-	memcpy(img1, image1.data(), size1*sizeof(Data));
-	memcpy(img2, image2.data(), size2*sizeof(Data));
+	LibType::Data *img1 = new LibType::Data[size1];
+	LibType::Data *img2 = new LibType::Data[size2];
+	memcpy(img1, image1.data(), size1*sizeof(LibType::Data));
+	memcpy(img2, image2.data(), size2*sizeof(LibType::Data));
 
-	opencl_usu_2009::Identificator<Data, VData> id1(img1, image1.width(), image1.height());
-	opencl_usu_2009::Identificator<Data, VData> id2(image2.width(), image2.height());
+	LibType id1(img1, image1.width(), image1.height());
+	LibType id2(image2.width(), image2.height());
 	//id1.setInterestRect(270, 120, 140, 124);
 	//id2.setInterestRect(120, 20, 140, 124);
 	id1.gauss(id2, sigma, n);
 	id2.unload(img2);
-	memcpy(image2.data(), img2, size2*sizeof(Data));
-	memcpy(image2.data() + size2, img2, size2*sizeof(Data));
-	memcpy(image2.data() + 2 * size2, img2, size2*sizeof(Data));
+	memcpy(image2.data(), img2, size2*sizeof(LibType::Data));
+	memcpy(image2.data() + size2, img2, size2*sizeof(LibType::Data));
+	memcpy(image2.data() + 2 * size2, img2, size2*sizeof(LibType::Data));
 	image2.display();
 	image2.save("4.bmp");
 	delete[] img1, img2;
